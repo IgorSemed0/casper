@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 casper-core = { path = "../casper-core" }
-tokio = { version = "1.46.1", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.46.1", features = ["rt-multi-thread", "macros", "net", "io-util"] }
+serde_json = "1.0.0"

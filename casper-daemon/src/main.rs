@@ -1,5 +1,5 @@
 use tokio::net::UnixListener;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::{AsyncReadExt, AsyncWriteExt}; // Add these imports
 use std::path::Path;
 use casper_core::commands::run_command;
 use casper_core::screen::move_mouse;
@@ -15,7 +15,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let listener = UnixListener::bind(socket_path)?;
 
     println!("Daemon listening on {:?}", socket_path);
-    loop: {
+    loop {
         let (mut socket, _) = listener.accept().await?;
         tokio::spawn(async move {
             let mut buf = vec![0; 1024];
@@ -41,8 +41,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Some("move_mouse") => {
                     let x = req["x"].as_i64().unwrap_or(0) as i32;
                     let y = req["y"].as_i64().unwrap_or(0) as i32;
-                    move_mouse(x, y);
-                    json!({ "status": "success" })
+                    match move_mouse(x, y) {
+                        Ok(_) => json!({ "status": "success" }),
+                        Err(e) => json!({ "status": "error", "message": e }),
+                    }
                 },
                 Some("show_notification") => {
                     let summary = req["summary"].as_str().unwrap_or("");

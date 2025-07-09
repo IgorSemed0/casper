@@ -4,5 +4,5 @@ members = [
     "casper-daemon",
     "casper-tui",
     "casper-tray"
-]
+, "tests/daemon/client"]
 resolver = "2"

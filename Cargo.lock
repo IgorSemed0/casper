@@ -235,6 +235,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "casper-client"
+version = "0.1.0"
+dependencies = [
+ "tokio",
+]
+
+[[package]]
 name = "casper-core"
 version = "0.1.0"
 dependencies = [
@@ -250,6 +257,7 @@ name = "casper-daemon"
 version = "0.1.0"
 dependencies = [
  "casper-core",
+ "serde_json",
  "tokio",
 ]
 
