@@ -4,3 +4,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+casper-core = { path = "../casper-core" }
+tokio = { version = "1.46.1", features = ["rt-multi-thread", "macros"] }
