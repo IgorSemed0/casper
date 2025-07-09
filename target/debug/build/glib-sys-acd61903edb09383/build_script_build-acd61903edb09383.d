@@ -1,0 +1,5 @@
+/home/percy/Documents/programming/casper/target/debug/build/glib-sys-acd61903edb09383/build_script_build-acd61903edb09383.d: /home/percy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/glib-sys-0.20.10/build.rs
+
+/home/percy/Documents/programming/casper/target/debug/build/glib-sys-acd61903edb09383/build_script_build-acd61903edb09383: /home/percy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/glib-sys-0.20.10/build.rs
+
+/home/percy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/glib-sys-0.20.10/build.rs:
