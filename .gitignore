@@ -30,3 +30,5 @@ Thumbs.db
 # Environment-specific files
 .env
 *.local
+
+.git/
