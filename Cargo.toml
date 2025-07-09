@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "casper-core",
+    "casper-daemon",
+    "casper-tui",
+    "casper-tray"
+]
+resolver = "2"
