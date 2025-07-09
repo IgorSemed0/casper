@@ -1,0 +1,32 @@
+# Rust build artifacts
+/target/
+/**/*.rs.bk
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Dependency directories (if vendored)
+/vendor/
+
+# Test-related temporary files
+/tmp/casper.sock
+
+# Documentation build artifacts
+/doc/
+
+# Environment-specific files
+.env
+*.local
