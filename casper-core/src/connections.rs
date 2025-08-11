@@ -1,6 +1,6 @@
 use reqwest::Client;
 
-pub async fn connect_to_service(service: &str, action: &str) -> Result<String, String> {
+pub async fn connect_to_service(service: &str, _action: &str) -> Result<String, String> {
     //  Example HTTP request
     let client = Client::new();
     match service {
