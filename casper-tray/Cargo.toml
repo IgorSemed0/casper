@@ -5,5 +5,5 @@ edition = "2024"
 
 [dependencies]
 casper-core = { path = "../casper-core" }
-gtk4 = "0.9.6"              # GTK tray support
-tokio = { version = "1.46.1", features = ["rt", "net"] }  # Async runtime
+gtk4 = "0.9.6"
+tokio = { version = "1.46.1", features = ["rt", "net"] }

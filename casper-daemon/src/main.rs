@@ -2,8 +2,13 @@ use tokio::net::UnixListener;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use std::path::Path;
 use casper_core::commands::run_command;
-use casper_core::screen::move_mouse;
+use casper_core::screen::{move_mouse, type_text};
 use casper_core::notifications::show_notification;
+use casper_core::connections::connect_to_service;
+use casper_core::mcp::process_mcp;
+use casper_core::ai::process_command;
+use casper_core::voice::recognize_voice;
+use casper_core::tts::speak;
 use serde_json::json;
 
 #[tokio::main]
@@ -46,10 +51,52 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         Err(e) => json!({ "status": "error", "message": e }),
                     }
                 },
+                Some("type_text") => {
+                    let text = req["text"].as_str().unwrap_or("");
+                    match type_text(text) {
+                        Ok(_) => json!({ "status": "success" }),
+                        Err(e) => json!({ "status": "error", "message": e }),
+                    }
+                },
                 Some("show_notification") => {
                     let summary = req["summary"].as_str().unwrap_or("");
                     let body = req["body"].as_str().unwrap_or("");
                     match show_notification(summary, body) {
+                        Ok(_) => json!({ "status": "success" }),
+                        Err(e) => json!({ "status": "error", "message": e }),
+                    }
+                },
+                Some("connect_to_service") => {
+                    let service = req["service"].as_str().unwrap_or("");
+                    let action = req["action"].as_str().unwrap_or("");
+                    match connect_to_service(service, action).await {
+                        Ok(result) => json!({ "status": "success", "result": result }),
+                        Err(e) => json!({ "status": "error", "message": e }),
+                    }
+                },
+                Some("process_mcp") => {
+                    let data = req["data"].as_str().unwrap_or("");
+                    match process_mcp(data) {
+                        Ok(result) => json!({ "status": "success", "result": result }),
+                        Err(e) => json!({ "status": "error", "message": e }),
+                    }
+                },
+                Some("process_command") => {
+                    let command = req["command"].as_str().unwrap_or("");
+                    match process_command(command) {
+                        Ok(result) => json!({ "status": "success", "result": result }),
+                        Err(e) => json!({ "status": "error", "message": e }),
+                    }
+                },
+                Some("recognize_voice") => {
+                    match recognize_voice() {
+                        Ok(result) => json!({ "status": "success", "result": result }),
+                        Err(e) => json!({ "status": "error", "message": e }),
+                    }
+                },
+                Some("speak") => {
+                    let text = req["text"].as_str().unwrap_or("");
+                    match speak(text) {
                         Ok(_) => json!({ "status": "success" }),
                         Err(e) => json!({ "status": "error", "message": e }),
                     }
