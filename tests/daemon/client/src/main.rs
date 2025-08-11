@@ -20,7 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         r#"{"type": "process_mcp", "data": "test"}"#,
         r#"{"type": "process_command", "command": "hello"}"#,
         r#"{"type": "recognize_voice"}"#,
-        r#"{"type": "speak", "text": "Hello, this is Casper speaking, is evething ok with you?"}"#,
+        r#"{"type": "speak", "text": "Hello, noah, how are you? this is Casper speaking, is evething ok with you?"}"#,
     ];
 
     for request in tests {
