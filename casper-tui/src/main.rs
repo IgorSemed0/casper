@@ -12,7 +12,7 @@ use crossterm::{
 use tokio::net::UnixStream;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use serde_json::json;
-use std::io::{self, Stdout};
+use std::io;
 
 struct App {
     input: String,
@@ -72,7 +72,9 @@ fn main() -> io::Result<()> {
             if let Event::Key(key) = event::read()? {
                 match key.code {
                     KeyCode::Char(c) => app.input.push(c),
-                    KeyCode::Backspace => app.input.pop(),
+                    KeyCode::Backspace => {
+                        app.input.pop(); // Discard return value to return ()
+                    },
                     KeyCode::Enter => {
                         let request = json!({
                             "type": "run_command",
