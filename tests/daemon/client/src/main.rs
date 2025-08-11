@@ -1,14 +1,32 @@
 use tokio::net::UnixStream;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn send_request(request: &str) -> Result<String, Box<dyn std::error::Error>> {
     let mut stream = UnixStream::connect("/tmp/casper.sock").await?;
-    let request = r#"{"type": "run_command", "command": "echo Hello, World!"}"#;
     stream.write_all(request.as_bytes()).await?;
     let mut buf = vec![0; 1024];
     let n = stream.read(&mut buf).await?;
-    let response = String::from_utf8_lossy(&buf[..n]);
-    println!("{}", response);
+    Ok(String::from_utf8_lossy(&buf[..n]).to_string())
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let tests = vec![
+        r#"{"type": "run_command", "command": "echo Hello, World!"}"#,
+        r#"{"type": "move_mouse", "x": 100, "y": 200}"#,
+        r#"{"type": "type_text", "text": "Hello from Casper"}"#,
+        r#"{"type": "show_notification", "summary": "Test", "body": "Hello from Casper!"}"#,
+        r#"{"type": "connect_to_service", "service": "example_api", "action": "get"}"#,
+        r#"{"type": "process_mcp", "data": "test"}"#,
+        r#"{"type": "process_command", "command": "hello"}"#,
+        r#"{"type": "recognize_voice"}"#,
+        r#"{"type": "speak", "text": "Hello, this is Casper speaking"}"#,
+    ];
+
+    for request in tests {
+        let response = send_request(request).await?;
+        println!("Request: {}\nResponse: {}\n", request, response);
+    }
+
     Ok(())
 }
