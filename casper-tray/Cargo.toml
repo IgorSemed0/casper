@@ -6,4 +6,4 @@ edition = "2024"
 [dependencies]
 casper-core = { path = "../casper-core" }
 gtk4 = "0.9.6"
-tokio = { version = "1.46.1", features = ["rt", "net"] }
+tokio = { version = "1.46.1", features = ["rt-multi-thread", "net"] }
