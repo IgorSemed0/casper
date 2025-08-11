@@ -5,6 +5,6 @@ edition = "2024"
 
 [dependencies]
 casper-core = { path = "../casper-core" }
-ratatui = "0.23.0"          # TUI framework
-crossterm = "0.27.0"       # Terminal handling
-tokio = { version = "1.46.1", features = ["rt", "net"] }  # Async runtime
+ratatui = "0.23.0"
+crossterm = "0.27.0"
+tokio = { version = "1.46.1", features = ["rt", "net"] }
