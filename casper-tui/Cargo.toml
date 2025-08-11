@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-casper-core = { path = "../casper-core" }
+casper-core = { version = "0.1.0", path = "../casper-core" }
 ratatui = "0.26.2"
 crossterm = "0.27.0"
 tokio = { version = "1.46.1", features = ["rt", "net", "io-util"] }
