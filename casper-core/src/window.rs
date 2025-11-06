@@ -1,5 +1,28 @@
 use std::process::Command;
 
+/// Detect which window manager/compositor is running
+fn detect_environment() -> WindowEnvironment {
+    // Check for Hyprland
+    if std::env::var("HYPRLAND_INSTANCE_SIGNATURE").is_ok() {
+        return WindowEnvironment::Hyprland;
+    }
+
+    // Check for Wayland (generic)
+    if std::env::var("WAYLAND_DISPLAY").is_ok() {
+        return WindowEnvironment::Wayland;
+    }
+
+    // Default to X11
+    WindowEnvironment::X11
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum WindowEnvironment {
+    Hyprland,
+    Wayland,
+    X11,
+}
+
 /// Check if a process is running by name
 pub fn is_process_running(process_name: &str) -> Result<bool, String> {
     let output = Command::new("pgrep")
@@ -40,50 +63,92 @@ pub fn launch_application(app_name: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Focus a window by application name (using wmctrl)
+/// Focus a window by application name
 pub fn focus_window(app_name: &str) -> Result<(), String> {
-    let output = Command::new("wmctrl")
-        .arg("-a")
-        .arg(app_name)
-        .output()
-        .map_err(|e| format!("Failed to execute wmctrl: {}", e))?;
+    match detect_environment() {
+        WindowEnvironment::Hyprland => {
+            // Use hyprctl to focus window
+            let output = Command::new("hyprctl")
+                .args(&["dispatch", "focuswindow", &format!("title:{}", app_name)])
+                .output()
+                .map_err(|e| format!("Failed to execute hyprctl: {}", e))?;
 
-    if output.status.success() {
-        Ok(())
-    } else {
-        Err(format!(
-            "Failed to focus window: {}",
-            String::from_utf8_lossy(&output.stderr)
-        ))
+            if output.status.success() {
+                Ok(())
+            } else {
+                Err(format!(
+                    "Failed to focus window: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                ))
+            }
+        }
+        WindowEnvironment::Wayland | WindowEnvironment::X11 => {
+            // Use wmctrl for X11/generic Wayland
+            let output = Command::new("wmctrl")
+                .arg("-a")
+                .arg(app_name)
+                .output()
+                .map_err(|e| format!("Failed to execute wmctrl: {}", e))?;
+
+            if output.status.success() {
+                Ok(())
+            } else {
+                Err(format!(
+                    "Failed to focus window: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                ))
+            }
+        }
     }
 }
 
 /// Get list of all windows with their properties
 pub fn list_windows() -> Result<Vec<WindowInfo>, String> {
-    let output = Command::new("wmctrl")
-        .arg("-l")
-        .arg("-p")
-        .arg("-x")
-        .output()
-        .map_err(|e| format!("Failed to execute wmctrl: {}", e))?;
+    match detect_environment() {
+        WindowEnvironment::Hyprland => {
+            // Use hyprctl to list windows
+            let output = Command::new("hyprctl")
+                .args(&["clients", "-j"])
+                .output()
+                .map_err(|e| format!("Failed to execute hyprctl: {}", e))?;
 
-    if !output.status.success() {
-        return Err(format!(
-            "wmctrl failed: {}",
-            String::from_utf8_lossy(&output.stderr)
-        ));
-    }
+            if !output.status.success() {
+                return Err(format!(
+                    "hyprctl failed: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                ));
+            }
 
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let mut windows = Vec::new();
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            parse_hyprctl_clients(&stdout)
+        }
+        WindowEnvironment::Wayland | WindowEnvironment::X11 => {
+            let output = Command::new("wmctrl")
+                .arg("-l")
+                .arg("-p")
+                .arg("-x")
+                .output()
+                .map_err(|e| format!("Failed to execute wmctrl: {}", e))?;
 
-    for line in stdout.lines() {
-        if let Some(window_info) = parse_wmctrl_line(line) {
-            windows.push(window_info);
+            if !output.status.success() {
+                return Err(format!(
+                    "wmctrl failed: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                ));
+            }
+
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let mut windows = Vec::new();
+
+            for line in stdout.lines() {
+                if let Some(window_info) = parse_wmctrl_line(line) {
+                    windows.push(window_info);
+                }
+            }
+
+            Ok(windows)
         }
     }
-
-    Ok(windows)
 }
 
 /// Get active window information (using xdotool or gdbus for Wayland)
@@ -282,6 +347,58 @@ fn parse_wmctrl_line(line: &str) -> Option<WindowInfo> {
         title,
         machine,
     })
+}
+
+/// Parse Hyprland clients JSON output
+fn parse_hyprctl_clients(json_str: &str) -> Result<Vec<WindowInfo>, String> {
+    // Simple JSON parsing for Hyprland clients
+    // Format: [{"address":"0x...","class":"Firefox","title":"...","pid":1234,...}]
+    let mut windows = Vec::new();
+
+    // Very basic JSON parsing - in production, use serde_json
+    if let Some(start) = json_str.find('[') {
+        if let Some(end) = json_str.rfind(']') {
+            let content = &json_str[start + 1..end];
+
+            // Split by "},{"
+            for entry in content.split("},{") {
+                let entry = entry.trim_matches(|c| c == '{' || c == '}');
+
+                let mut id = String::new();
+                let mut class = String::new();
+                let mut title = String::new();
+                let mut pid = 0u32;
+
+                for field in entry.split(',') {
+                    if let Some(colon_pos) = field.find(':') {
+                        let key = field[..colon_pos].trim().trim_matches('"');
+                        let value = field[colon_pos + 1..].trim().trim_matches('"');
+
+                        match key {
+                            "address" => id = value.to_string(),
+                            "class" => class = value.to_string(),
+                            "title" => title = value.to_string(),
+                            "pid" => pid = value.parse().unwrap_or(0),
+                            _ => {}
+                        }
+                    }
+                }
+
+                if !id.is_empty() {
+                    windows.push(WindowInfo {
+                        id,
+                        pid,
+                        desktop: 0,
+                        class,
+                        title,
+                        machine: String::from("localhost"),
+                    });
+                }
+            }
+        }
+    }
+
+    Ok(windows)
 }
 
 /// Check if an application window is visible/open
