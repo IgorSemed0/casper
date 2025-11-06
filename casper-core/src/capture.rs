@@ -1,5 +1,3 @@
-use std::fs;
-use std::path::Path;
 use std::process::Command;
 
 /// Screen capture utility for Wayland and X11

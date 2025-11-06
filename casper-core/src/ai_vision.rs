@@ -3,7 +3,6 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
-use std::path::Path;
 
 /// Configuration for AI provider
 #[derive(Debug, Clone)]
